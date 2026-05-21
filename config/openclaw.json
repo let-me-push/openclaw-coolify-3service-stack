@@ -1,0 +1,79 @@
+{
+  "gateway": {
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    },
+    "bind": "lan",
+    "controlUi": {
+      "allowedOrigins": [
+        "http://localhost:18789",
+        "http://127.0.0.1:18789",
+        "${OPENCLAW_CONTROL_UI_ORIGIN:-http://localhost:18789}"
+      ]
+    }
+  },
+  "tools": {
+    "profile": "coding",
+    "elevated": {
+      "enabled": true,
+      "allowFrom": {
+        "webchat": ["*"],
+        "telegram": ["tg:${TELEGRAM_ADMIN_ID}"]
+      }
+    },
+    "exec": {
+      "notifyOnExit": true
+    }
+  },
+  "browser": {
+    "enabled": true,
+    "defaultProfile": "browserless",
+    "ssrfPolicy": {
+      "dangerouslyAllowPrivateNetwork": true
+    },
+    "remoteCdpTimeoutMs": 7000,
+    "remoteCdpHandshakeTimeoutMs": 12000,
+    "profiles": {
+      "browserless": {
+        "cdpUrl": "ws://browser:3000?token=${BROWSER_TOKEN}",
+        "attachOnly": true,
+        "color": "#00AA00"
+      }
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "allowlist",
+      "allowFrom": ["tg:${TELEGRAM_ADMIN_ID}"],
+      "replyToMode": "first",
+      "actions": {
+        "reactions": true,
+        "sendMessage": true
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "thinkingDefault": "medium"
+    },
+    "list": [
+      {
+        "id": "main",
+        "name": "Main",
+        "default": true,
+        "tools": {
+          "elevated": {
+            "enabled": true,
+            "allowFrom": {
+              "webchat": ["*"],
+              "telegram": ["tg:${TELEGRAM_ADMIN_ID}"]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
