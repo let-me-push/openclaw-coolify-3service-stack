@@ -1,0 +1,67 @@
+name: openclaw-coolify-3service
+
+services:
+  browser:
+    image: browserless/chrome:latest
+    restart: unless-stopped
+    environment:
+      TOKEN: ${BROWSER_TOKEN:?}
+      PREBOOT_CHROME: "true"
+      CONCURRENT: ${BROWSER_CONCURRENT:-5}
+      QUEUED: ${BROWSER_QUEUED:-10}
+      TIMEOUT: ${BROWSER_TIMEOUT_MS:-120000}
+      ENABLE_CORS: "true"
+      CORS_ALLOW_ORIGIN: "*"
+      TZ: ${TZ:-UTC}
+      SERVICE_FQDN_BROWSER_3000: https://browser.m.paiyay.de
+    shm_size: 1gb
+
+  openclaw:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    restart: unless-stopped
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:?}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      TZ: ${TZ:-UTC}
+      SERVICE_FQDN_OPENCLAW_18789: https://openclaw.m.paiyay.de
+    volumes:
+      - ./data/openclaw:/home/node/.openclaw
+      - ./config/openclaw.json:/home/node/.openclaw/openclaw.json
+      - ./:/home/node/.openclaw/workspace/stack
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    init: true
+    command:
+      [
+        "node",
+        "dist/index.js",
+        "gateway",
+        "--bind",
+        "${OPENCLAW_GATEWAY_BIND:-lan}",
+        "--port",
+        "18789"
+      ]
+    depends_on:
+      - browser
+
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      PASSWORD: ${CODE_SERVER_PASSWORD:?}
+      SUDO_PASSWORD: ${CODE_SERVER_SUDO_PASSWORD:-}
+      DEFAULT_WORKSPACE: /config/workspace
+      SERVICE_FQDN_CODE-SERVER_8443: https://code.m.paiyay.de
+    volumes:
+      - ./data/code-server:/config
+      - ./:/config/workspace
+    depends_on:
+      - openclaw
