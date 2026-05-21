@@ -31,7 +31,46 @@ services:
       SERVICE_FQDN_OPENCLAW_18789: https://openclaw.m.paiyay.de
     volumes:
       - ./data/openclaw:/home/node/.openclaw
-      - ./config/openclaw.json:/home/node/.openclaw/openclaw.json
+      - type: bind
+        source: ./config/openclaw.json
+        target: /home/node/.openclaw/openclaw.json
+        content: |
+          {
+            "gateway": {
+              "mode": "local",
+              "auth": { "mode": "token", "token": "${OPENCLAW_GATEWAY_TOKEN}" },
+              "bind": "lan",
+              "controlUi": {
+                "allowedOrigins": [
+                  "http://localhost:18789",
+                  "http://127.0.0.1:18789",
+                  "https://openclaw.m.paiyay.de"
+                ]
+              }
+            },
+            "tools": {
+              "profile": "coding",
+              "elevated": {
+                "enabled": true,
+                "allowFrom": {
+                  "webchat": ["*"],
+                  "telegram": ["tg:1555096803"]
+                }
+              }
+            },
+            "browser": {
+              "enabled": true,
+              "defaultProfile": "browserless",
+              "ssrfPolicy": { "dangerouslyAllowPrivateNetwork": true },
+              "profiles": {
+                "browserless": {
+                  "cdpUrl": "ws://browser:3000?token=${BROWSER_TOKEN}",
+                  "attachOnly": true,
+                  "color": "#00AA00"
+                }
+              }
+            }
+          }
       - ./:/home/node/.openclaw/workspace/stack
     extra_hosts:
       - "host.docker.internal:host-gateway"
