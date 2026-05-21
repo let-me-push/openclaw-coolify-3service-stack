@@ -13,7 +13,7 @@ services:
       ENABLE_CORS: "true"
       CORS_ALLOW_ORIGIN: "*"
       TZ: ${TZ:-UTC}
-      SERVICE_FQDN_BROWSER_3000: https://browser.m.paiyay.de
+      SERVICE_FQDN_BROWSER_3000: https://${SERVICE_FQDN_BROWSER}
     shm_size: 1gb
 
   openclaw:
@@ -28,62 +28,18 @@ services:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       TZ: ${TZ:-UTC}
-      SERVICE_FQDN_OPENCLAW_18789: https://openclaw.m.paiyay.de
+      SERVICE_FQDN_OPENCLAW_18789: https://${SERVICE_FQDN_OPENCLAW}
     volumes:
       - ./data/openclaw:/home/node/.openclaw
-      - type: bind
-        source: ./config/openclaw.json
-        target: /home/node/.openclaw/openclaw.json
-        content: |
-          {
-            "gateway": {
-              "mode": "local",
-              "auth": { "mode": "token", "token": "${OPENCLAW_GATEWAY_TOKEN}" },
-              "bind": "lan",
-              "controlUi": {
-                "allowedOrigins": [
-                  "http://localhost:18789",
-                  "http://127.0.0.1:18789",
-                  "https://openclaw.m.paiyay.de"
-                ]
-              }
-            },
-            "tools": {
-              "profile": "coding",
-              "elevated": {
-                "enabled": true,
-                "allowFrom": {
-                  "webchat": ["*"],
-                  "telegram": ["tg:1555096803"]
-                }
-              }
-            },
-            "browser": {
-              "enabled": true,
-              "defaultProfile": "browserless",
-              "ssrfPolicy": { "dangerouslyAllowPrivateNetwork": true },
-              "profiles": {
-                "browserless": {
-                  "cdpUrl": "ws://browser:3000?token=${BROWSER_TOKEN}",
-                  "attachOnly": true,
-                  "color": "#00AA00"
-                }
-              }
-            }
-          }
       - ./:/home/node/.openclaw/workspace/stack
     extra_hosts:
       - "host.docker.internal:host-gateway"
     init: true
     command:
       [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "${OPENCLAW_GATEWAY_BIND:-lan}",
-        "--port",
-        "18789"
+        "sh",
+        "-lc",
+        "set -e; mkdir -p /home/node/.openclaw; if [ -d /home/node/.openclaw/openclaw.json ]; then rm -rf /home/node/.openclaw/openclaw.json; fi; cp /home/node/.openclaw/workspace/stack/config/openclaw.json /home/node/.openclaw/openclaw.json; exec node dist/index.js gateway --bind \"${OPENCLAW_GATEWAY_BIND:-lan}\" --port 18789"
       ]
     depends_on:
       - browser
@@ -98,7 +54,7 @@ services:
       PASSWORD: ${CODE_SERVER_PASSWORD:?}
       SUDO_PASSWORD: ${CODE_SERVER_SUDO_PASSWORD:-}
       DEFAULT_WORKSPACE: /config/workspace
-      SERVICE_FQDN_CODE-SERVER_8443: https://code.m.paiyay.de
+      SERVICE_FQDN_CODE-SERVER_8443: https://${SERVICE_FQDN_CODE_SERVER}
     volumes:
       - ./data/code-server:/config
       - ./:/config/workspace
