@@ -27,7 +27,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/workspace/stack/config/openclaw.json
+      OPENCLAW_CONFIG_PATH: /tmp/openclaw.json
       TZ: ${TZ:-UTC}
       SERVICE_FQDN_OPENCLAW_18789: https://${SERVICE_FQDN_OPENCLAW}
     volumes:
@@ -38,13 +38,9 @@ services:
     init: true
     command:
       [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "${OPENCLAW_GATEWAY_BIND:-lan}",
-        "--port",
-        "18789"
+        "sh",
+        "-lc",
+        "node /home/node/.openclaw/workspace/stack/scripts/write-openclaw-config.mjs && exec node dist/index.js gateway --bind \"${OPENCLAW_GATEWAY_BIND:-lan}\" --port 18789"
       ]
     depends_on:
       - browser
